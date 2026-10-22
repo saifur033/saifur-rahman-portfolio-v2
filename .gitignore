@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production build artifacts
+dist/
+dist-ssr/
+
+# Environment variables & secrets
+.env
+.env.local
+.env.*.local
+
+# Persistent database & media files (preserve folder with .gitkeep)
+data/*.json
+!data/.gitkeep
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Logs & temp files
+*.log
+.DS_Store
+*.swp
+*.swo
+.aistudio/

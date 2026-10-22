@@ -1,0 +1,55 @@
+{% extends 'admin/base.html' %}{% block title %}Messages{% endblock %}{% block
+content %}
+<div class="list-heading">
+  <div>
+    <a href="{{ url_for('admin.dashboard') }}">← Studio overview</a>
+    <h1>Contact messages</h1>
+  </div>
+</div>
+<p>
+  Messages submitted through the public contact form. Nothing is emailed
+  automatically — review them here.
+</p>
+<div class="message-list">
+  {% for m in messages %}
+  <article class="message-card {{ 'unread' if not m.is_read else '' }}">
+    <header>
+      <strong>{{ m.name }}</strong
+      ><a href="mailto:{{ m.email }}">{{ m.email }}</a
+      ><small>{{ m.created_at }}</small>
+    </header>
+    <p>{{ m.body }}</p>
+    <footer class="actions">
+      {% if not m.is_read %}
+      <form
+        method="post"
+        action="{{ url_for('admin.message_mark_read',msg_id=m.id) }}"
+      >
+        <input
+          type="hidden"
+          name="csrf_token"
+          value="{{ csrf_token() }}"
+        /><button class="text-button" type="submit">Mark as read</button>
+      </form>
+      {% endif %}
+      <form
+        method="post"
+        action="{{ url_for('admin.message_delete',msg_id=m.id) }}"
+        data-confirm="Delete this message? This cannot be undone."
+      >
+        <input
+          type="hidden"
+          name="csrf_token"
+          value="{{ csrf_token() }}"
+        /><button class="text-button danger" type="submit">Delete</button>
+      </form>
+    </footer>
+  </article>
+  {% else %}
+  <p class="empty">
+    No messages yet. When someone contacts you through the site, the message
+    appears here.
+  </p>
+  {% endfor %}
+</div>
+{% endblock %}

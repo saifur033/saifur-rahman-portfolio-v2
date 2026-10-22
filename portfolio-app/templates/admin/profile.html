@@ -1,0 +1,49 @@
+{% extends 'admin/base.html' %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<a href="{{ url_for('admin.dashboard') }}">← Studio overview</a>
+<h1>Profile &amp; Appearance</h1>
+<form method="post" enctype="multipart/form-data" class="edit-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="form-grid">
+    {% for key, label in [
+      ('name', 'Name'), ('tagline', 'Tagline'), ('role', 'Current role'),
+      ('company', 'Organization'), ('degree', 'Degree / academic direction'),
+      ('university', 'University'), ('email', 'Public email'), ('phone', 'Public phone'),
+      ('website', 'Website URL'), ('linkedin', 'LinkedIn URL'), ('github', 'GitHub URL'),
+      ('welcome_text', 'Welcome message'), ('guide_dialogue', 'Guide introduction')
+    ] %}
+      <label>{{ label }}
+        <input name="{{ key }}" value="{{ data.get(key, '') }}"
+          {% if key == 'email' %}type="email" autocomplete="email"{% elif key == 'phone' %}type="tel" autocomplete="tel"{% elif key in ['website', 'linkedin', 'github'] %}type="url"{% endif %}>
+      </label>
+    {% endfor %}
+    <label>Theme
+      <select name="theme">
+        <option value="light" {{ 'selected' if data.get('theme', 'light') != 'dark' else '' }}>Light</option>
+        <option value="dark" {{ 'selected' if data.get('theme') == 'dark' else '' }}>Dark</option>
+      </select>
+    </label>
+    <label class="full">About<textarea name="about" rows="5">{{ data.get('about', '') }}</textarea></label>
+    <label class="full">Contact section intro<textarea name="contact_intro" rows="2">{{ data.get('contact_intro', '') }}</textarea></label>
+    <h2 class="subheading full">Location (optional, public)</h2>
+    <label>Location label<input name="location_label" value="{{ data.get('location_label', '') }}" placeholder="e.g. Dhaka, Bangladesh"></label>
+    <label>Public address / area<input name="location_address" value="{{ data.get('location_address', '') }}" placeholder="Area or city only — never a home address"></label>
+    <label>Map embed URL<input name="map_url" value="{{ data.get('map_url', '') }}" placeholder="https://www.openstreetmap.org/export/embed.html?bbox=..."></label>
+    <label>Latitude<input name="map_lat" value="{{ data.get('map_lat', '') }}" inputmode="decimal" placeholder="e.g. 23.8103"></label>
+    <label>Longitude<input name="map_lng" value="{{ data.get('map_lng', '') }}" inputmode="decimal" placeholder="e.g. 90.4125"></label>
+    <p class="notice full">Leave the location fields blank to hide the map section entirely. Only publish an area/city label — never a home address.</p>
+    <h2 class="subheading full">Media</h2>
+    <label>Profile photo
+      <input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif">
+      {% if data.get('photo_filename') %}<span class="muted">Current photo is saved.</span>{% endif %}
+    </label>
+    <label>CV (PDF)
+      <input type="file" name="cv" accept="application/pdf,.pdf">
+      {% if data.get('cv_filename') %}<span class="muted">A CV is already saved.</span>{% endif %}
+    </label>
+  </div>
+  <p class="notice">Only details you enter here are shown publicly. Leave optional career and contact fields blank to keep them private.</p>
+  <button class="btn primary" type="submit">Save profile</button>
+</form>
+{% endblock %}

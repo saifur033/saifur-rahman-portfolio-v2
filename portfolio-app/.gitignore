@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+instance/*.sqlite*
+instance/*.db*
+instance/*.bak
+instance/*.key
+instance/secret_key
+media/
+.pytest_cache/
+.coverage
+# Environment/secret files — never commit
+.env
+.env.*
+*.env
+*.bak-pre-render

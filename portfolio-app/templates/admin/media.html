@@ -1,0 +1,77 @@
+{% extends 'admin/base.html' %}{% block title %}Media library{% endblock %}{%
+block content %}
+<div class="list-heading">
+  <div>
+    <a href="{{ url_for('admin.dashboard') }}">← Studio overview</a>
+    <h1>Media library</h1>
+  </div>
+</div>
+<p>
+  Files uploaded through record forms and the profile editor. Private files are
+  only reachable while signed in.
+</p>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Preview</th>
+        <th>File</th>
+        <th>Type</th>
+        <th>Used by</th>
+        <th>Visibility</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for m in items %}
+      <tr>
+        <td>
+          {% if m.mime.startswith('image/') %}<img
+            class="media-thumb"
+            src="{{ url_for('public.media',filename=m.filename) if not m.is_private else url_for('admin.preview_media',filename=m.filename) }}"
+            alt=""
+            loading="lazy"
+          />{% else %}<span class="media-doc">PDF</span>{% endif %}
+        </td>
+        <td>
+          <strong>{{ m.original_name }}</strong><small>{{ m.filename }}</small>
+        </td>
+        <td>{{ m.mime }}</td>
+        <td>
+          {% if m.content_kind %}<a
+            href="{{ url_for('admin.edit_content',kind=m.content_kind,item_id=m.content_id) }}"
+            >{{ m.content_title or m.content_kind }}</a
+          >{% elif m.is_private %}<small>Profile / unused</small>{% else
+          %}<small>—</small>{% endif %}
+        </td>
+        <td>
+          <span class="status-tag"
+            >{{ 'Private' if m.is_private else 'Public' }}</span
+          >
+        </td>
+        <td class="actions">
+          <form
+            method="post"
+            action="{{ url_for('admin.media_delete',filename=m.filename) }}"
+            data-confirm="Delete this file? Records referencing it will show a placeholder instead."
+          >
+            <input
+              type="hidden"
+              name="csrf_token"
+              value="{{ csrf_token() }}"
+            /><button class="text-button danger" type="submit">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="6">
+          No media uploaded yet. Upload images through record edit forms or the
+          profile page.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

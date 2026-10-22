@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+{% block title %}{{ profile.get('name') or 'Portfolio' }} · Portfolio{% endblock %}
+{% block head %}
+<script type="importmap">
+  {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"}}
+</script>
+<script type="module" defer src="{{ url_for('static', filename='js/studio3d.js', v='15') }}"></script>
+{% endblock %}
+
+{% block content %}
+<section class="hero" id="top" aria-labelledby="heroTitle">
+  <div class="hero-copy">
+    <p class="eyebrow">COMMUNICATION · OUTREACH · TECHNOLOGY</p>
+    <h1 id="heroTitle">{{ profile.get('name') or 'Saifur Rahman' }}</h1>
+    {% if profile.get('role') %}<h2>{{ profile.role }}</h2>{% endif %}
+    {% if profile.get('degree') %}<p class="subline">{{ profile.degree }}{% if profile.get('university') %} · {{ profile.university }}{% endif %}</p>{% endif %}
+    {% if profile.get('tagline') %}<p class="tagline">{{ profile.tagline }}</p>{% endif %}
+    {% if profile.get('about') %}<p class="hero-about">{{ profile.about }}</p>{% endif %}
+    <div class="hero-actions">
+      <button class="btn primary" id="startTour" type="button">Explore with guide ↗</button>
+      <button class="btn" id="quickView" type="button" aria-controls="quickPanel" aria-expanded="false">Quick view</button>
+      {% if profile.get('cv_filename') %}<a class="btn" href="{{ url_for('public.cv') }}">↓ Download CV</a>{% endif %}
+      <a class="btn" href="#contact">✉ Contact</a>
+    </div>
+    <div class="route-picker" aria-label="Choose a guided tour">
+      <strong>Choose a route</strong>
+      <div>
+        <button class="route-btn active" data-route="journey" type="button" aria-pressed="true">↗ Professional Journey</button>
+        <button class="route-btn" data-route="research" type="button" aria-pressed="false">♧ Projects &amp; Research</button>
+      </div>
+    </div>
+    <p class="speech" id="guideSpeech" aria-live="polite">{{ profile.get('welcome_text') or 'Welcome. Choose a room to explore.' }}</p>
+  </div>
+  <div class="studio-wrap">
+    <div id="studio3d" data-guide-dialogue="{{ profile.get('guide_dialogue', '') }}" aria-label="Interactive 3D office. Choose a room button to follow the guide.">
+      <div class="scene-fallback">
+        <div class="fallback-window" aria-hidden="true">☀</div>
+        <div class="fallback-shelf" aria-hidden="true">▰　▰　▰</div>
+        <div class="fallback-guide" aria-hidden="true">◉<small>Tour guide</small></div>
+        <div class="fallback-desk" aria-hidden="true">RECEPTION</div>
+        <div class="fallback-person" aria-hidden="true">◉<small>Receptionist</small></div>
+      </div>
+    </div>
+    <p class="tour-status" id="tourStatus" aria-live="polite">Choose a room to begin exploring.</p>
+    <nav class="room-nav" aria-label="Portfolio rooms">
+      <button data-room="about" type="button" aria-pressed="false">About &amp; Career</button>
+      <button data-room="projects" type="button" aria-pressed="false">Projects &amp; Innovation</button>
+      <button data-room="publications" type="button" aria-pressed="false">Publications</button>
+      <button data-room="outreach" type="button" aria-pressed="false">Clubs &amp; Outreach</button>
+      <button data-room="certificates" type="button" aria-pressed="false">Certificates</button>
+      <button data-room="trophies" type="button" aria-pressed="false">Trophy Room</button>
+      <button data-room="gallery" type="button" aria-pressed="false">Event Gallery</button>
+      <button data-room="contact" type="button" aria-pressed="false">Contact</button>
+    </nav>
+  </div>
+</section>
+
+<section class="metrics" aria-label="Published portfolio totals">
+  {% for key, label in [('clubs','Clubs engaged'),('meetings','Meetings'),('events','Activities'),('projects','Projects'),('publications','Publications'),('certificates','Certificates'),('crests','Crests')] %}
+    <div><strong>{{ data.counts[key] }}</strong><span>{{ label }}</span></div>
+  {% endfor %}
+</section>
+
+<section class="content-grid" aria-label="Portfolio">
+  <article class="room-panel section-about" id="about" aria-labelledby="aboutTitle" tabindex="-1">
+    <div class="panel-head"><span>01</span><h2 id="aboutTitle">About &amp; Career</h2><a href="#contact">Contact ↗</a></div>
+    <div class="about-feature">
+      {% if profile.get('photo_filename') %}<img class="profile-photo" src="{{ url_for('public.media', filename=profile.photo_filename) }}" alt="Profile portrait">
+      {% else %}<div class="avatar-placeholder" aria-hidden="true">{{ (profile.get('name') or 'SR')[:2] }}</div>{% endif %}
+      <div class="about-copy">
+        <p class="section-kicker">PROFILE</p>
+        {% if profile.get('name') %}<h3>{{ profile.name }}</h3>{% endif %}
+        {% if profile.get('role') or profile.get('company') %}<p class="muted">{{ profile.get('role', '') }}{% if profile.get('role') and profile.get('company') %} · {% endif %}{{ profile.get('company', '') }}</p>{% endif %}
+        {% if profile.get('about') %}<p>{{ profile.about }}</p>{% else %}<p class="muted">Profile details have not been published yet.</p>{% endif %}
+        {% if profile.get('degree') or profile.get('university') %}<p><strong>Education</strong> · {{ profile.get('degree', '') }}{% if profile.get('degree') and profile.get('university') %} · {% endif %}{{ profile.get('university', '') }}</p>{% endif %}
+      </div>
+      <div class="skills-block"><h3 class="subheading">Skills</h3><div class="chips">{% for item in data.skill %}<span>{{ item.title }}{% if item.data.get('level') %}<small>{{ item.data.level }}</small>{% endif %}</span>{% else %}<p class="empty">No skills have been published yet.</p>{% endfor %}</div></div>
+    </div>
+    <div class="timeline-wrap"><div class="section-heading"><div><p class="section-kicker">THE JOURNEY</p><h3>Career &amp; Education</h3></div><span>{{ data.career|length }} milestones</span></div>
+      <div class="career-timeline">
+        {% for item in data.career %}
+          <details class="career-milestone" {% if loop.first %}open{% endif %}>
+            <summary><span class="timeline-marker" aria-hidden="true"></span><span class="milestone-period">{{ item.data.get('period', '') }}</span><span class="milestone-title">{{ item.title }}</span><span class="milestone-org">{{ item.data.get('organization', '') }}</span><span class="milestone-type">{{ item.data.get('type', 'Milestone') }}</span></summary>
+            {% if item.data.get('description') %}<p>{{ item.data.description }}</p>{% endif %}
+          </details>
+        {% else %}<p class="empty">No career or education entries have been published yet.</p>{% endfor %}
+      </div>
+    </div>
+  </article>
+
+  <article class="room-panel section-projects" id="projects" aria-labelledby="projectsTitle" tabindex="-1">
+    <div class="panel-head"><span>02</span><h2 id="projectsTitle">Projects &amp; Innovation</h2><a href="#projects-list">Browse ↓</a></div>
+    <div class="section-intro"><p class="section-kicker">SELECTED WORK</p><p>Explore published projects, methods and outcomes.</p></div>
+    <div class="filters" id="projectFilters" role="group" aria-label="Filter projects">
+      <button class="filter active" data-filter="all" data-filter-target="projects-list" type="button" aria-pressed="true">All</button>
+      {% for category in data.category %}<button class="filter" data-filter="{{ category.title|lower }}" data-filter-target="projects-list" type="button" aria-pressed="false">{{ category.title }}</button>{% endfor %}
+    </div>
+    <div id="projects-list" class="project-showcase">
+      {% for item in data.project %}
+        <article class="project-card searchable" data-category="{{ item.data.get('category', '').strip().lower() }}">
+          {% if item.data.get('image_filename') and not item.data.image_filename.lower().endswith('.pdf') %}<img class="project-cover" src="{{ url_for('public.media', filename=item.data.image_filename) }}" alt="" loading="lazy">{% else %}<div class="project-cover project-cover-placeholder" aria-hidden="true"><span>SR</span></div>{% endif %}
+          <div class="project-content">
+            <div class="project-meta">{% if item.data.get('featured') in [true, 1, 'true', 'True', '1', 'yes', 'Yes'] %}<span class="featured-label">Featured</span>{% endif %}{% if item.data.get('category') %}<span>{{ item.data.category }}</span>{% endif %}</div>
+            <h3>{{ item.title }}</h3>
+            {% if item.data.get('summary') %}<p>{{ item.data.summary }}</p>{% endif %}
+            {% if item.data.get('technologies') %}<div class="tech-tags" aria-label="Technologies">{% for tech in item.data.technologies.split(',') %}<span>{{ tech.strip() }}</span>{% endfor %}</div>{% endif %}
+            {% if item.data.get('objective') or item.data.get('role') or item.data.get('result') or item.data.get('description') %}
+              <details class="project-details"><summary>Project details</summary>
+                {% if item.data.get('objective') %}<p><strong>Objective</strong> · {{ item.data.objective }}</p>{% endif %}
+                {% if item.data.get('role') %}<p><strong>Role</strong> · {{ item.data.role }}</p>{% endif %}
+                {% if item.data.get('result') %}<p><strong>Outcome</strong> · {{ item.data.result }}</p>{% endif %}
+                {% if item.data.get('description') %}<p>{{ item.data.description }}</p>{% endif %}
+                {% if item.data.get('video_url') %}<a href="{{ item.data.video_url }}" target="_blank" rel="noopener noreferrer">Project video ↗</a>{% endif %}
+              </details>
+            {% endif %}
+            <div class="item-links">{% if item.data.get('github') %}<a href="{{ item.data.github }}" target="_blank" rel="noopener noreferrer">GitHub ↗</a>{% endif %}{% if item.data.get('demo') %}<a href="{{ item.data.demo }}" target="_blank" rel="noopener noreferrer">Live demo ↗</a>{% endif %}<button class="text-button shortlist" type="button" data-key="project-{{ item.id }}" data-title="{{ item.title }}" aria-pressed="false">＋ Shortlist</button></div>
+          </div>
+        </article>
+      {% else %}<p class="empty">No projects have been published yet.</p>{% endfor %}
+    </div>
+  </article>
+
+  <article class="room-panel section-publications" id="publications" aria-labelledby="publicationsTitle" tabindex="-1">
+    <div class="panel-head"><span>03</span><h2 id="publicationsTitle">Publications</h2></div>
+    <div class="section-intro"><p class="section-kicker">RESEARCH LIBRARY</p><p>Published work and research in progress.</p></div>
+    <div class="publication-list">{% for item in data.publication %}
+      <article class="publication-entry"><div class="publication-index">{{ '%02d'|format(loop.index) }}</div><div class="publication-content">
+        <div class="publication-meta">{% if item.data.get('publication_status') %}<span class="status-tag">{{ item.data.publication_status }}</span>{% endif %}{% if item.data.get('type') %}<span>{{ item.data.type }}</span>{% endif %}{% if item.data.get('year') %}<span>{{ item.data.year }}</span>{% endif %}</div>
+        <h3>{{ item.title }}</h3>{% if item.data.get('authors') %}<p class="publication-authors">{{ item.data.authors }}</p>{% endif %}
+        {% if item.data.get('venue') or item.data.get('topic') %}<p class="muted">{% if item.data.get('venue') %}{{ item.data.venue }}{% endif %}{% if item.data.get('venue') and item.data.get('topic') %} · {% endif %}{{ item.data.get('topic', '') }}</p>{% endif %}
+        {% if item.data.get('abstract') %}<details class="publication-abstract"><summary>Abstract</summary><p>{{ item.data.abstract }}</p></details>{% endif %}
+        <div class="item-links">{% if item.data.get('doi') %}<a href="{{ item.data.doi }}" target="_blank" rel="noopener noreferrer">DOI ↗</a>{% endif %}{% if item.data.get('paper_url') %}<a href="{{ item.data.paper_url }}" target="_blank" rel="noopener noreferrer">Read paper ↗</a>{% endif %}{% if item.data.get('code_url') %}<a href="{{ item.data.code_url }}" target="_blank" rel="noopener noreferrer">Code ↗</a>{% endif %}</div>
+      </div></article>
+    {% else %}<p class="empty">No publications have been published yet.</p>{% endfor %}</div>
+  </article>
+
+  <article class="room-panel section-outreach" id="outreach" aria-labelledby="outreachTitle" tabindex="-1">
+    <div class="panel-head"><span>04</span><h2 id="outreachTitle">Clubs &amp; Outreach</h2></div>
+    {% if data.club %}<div class="organization-strip" aria-label="Organizations">{% for item in data.club %}
+      <a class="organization-mark" href="{{ url_for('public.club_detail', slug=item.slug) }}">
+        {% if item.data.get('image_filename') and not item.data.image_filename.lower().endswith('.pdf') %}<img src="{{ url_for('public.media', filename=item.data.image_filename) }}" alt="" loading="lazy">{% else %}<span class="organization-monogram" aria-hidden="true">{{ item.title[:1] }}</span>{% endif %}
+        <span><strong>{{ item.title }}</strong>{% if item.data.get('institution') %}<small>{{ item.data.institution }}</small>{% endif %}{% if item.data.get('relationship') %}<small>{{ item.data.relationship }}</small>{% endif %}</span><span aria-hidden="true">↗</span>
+      </a>
+    {% endfor %}</div>{% else %}<p class="empty">No clubs have been published yet.</p>{% endif %}
+    <div class="section-heading outreach-heading"><div><p class="section-kicker">PARTICIPATION &amp; CONTRIBUTION</p><h3>Activities</h3></div></div>
+    <div class="outreach-timeline">{% for item in data.activity %}
+      <article class="outreach-entry"><div class="activity-date">{{ item.data.get('date', '') }}</div><div class="activity-marker" aria-hidden="true"></div><div class="activity-copy"><span class="activity-type">{{ item.data.get('type', 'Activity') }}</span><h3>{{ item.title }}</h3>
+        {% if item.data.get('description') %}<p>{{ item.data.description }}</p>{% endif %}
+        {% if item.data.get('contribution') or item.data.get('outcome') %}<details class="activity-details"><summary>Contribution &amp; outcome</summary>{% if item.data.get('contribution') %}<p><strong>Contribution</strong> · {{ item.data.contribution }}</p>{% endif %}{% if item.data.get('outcome') %}<p><strong>Outcome</strong> · {{ item.data.outcome }}</p>{% endif %}</details>{% endif %}
+      </div></article>
+    {% else %}<p class="empty">No outreach activities have been published yet.</p>{% endfor %}</div>
+  </article>
+
+  <article class="room-panel section-certificates" id="certificates" aria-labelledby="certificatesTitle" tabindex="-1">
+    <div class="panel-head"><span>05</span><h2 id="certificatesTitle">Certificates</h2></div>
+    <label class="credential-search" for="certificateSearch"><span>Search credentials</span><input id="certificateSearch" type="search" placeholder="Title, issuer or category" autocomplete="off"></label>
+    <div class="credential-grid">{% for item in data.certificate %}
+      {% set image_name = item.data.get('image_filename', '') %}
+      <article class="credential-card searchable-credential" data-search="{{ (item.title ~ ' ' ~ item.data.get('issuer', '') ~ ' ' ~ item.data.get('category', '') ~ ' ' ~ item.data.get('issue_date', ''))|lower }}">
+        <div class="credential-preview">{% if image_name and not image_name.lower().endswith('.pdf') %}<button class="credential-image previewable" type="button" data-title="{{ item.title }}" data-description="{{ item.data.get('issuer', '') }} · {{ item.data.get('issue_date', '') }}" data-image="{{ url_for('public.media', filename=image_name) }}" aria-label="Preview certificate: {{ item.title }}"><img src="{{ url_for('public.media', filename=image_name) }}" alt="" loading="lazy"></button>{% else %}<span class="credential-emblem" aria-hidden="true">CERTIFICATE</span>{% endif %}</div>
+        <div class="credential-copy"><span class="section-kicker">{{ item.data.get('category', 'CREDENTIAL') }}</span><h3>{{ item.title }}</h3>{% if item.data.get('issuer') %}<p>{{ item.data.issuer }}</p>{% endif %}{% if item.data.get('issue_date') %}<small>Issued {{ item.data.issue_date }}</small>{% endif %}{% if item.data.get('expiry_date') %}<small>Expires {{ item.data.expiry_date }}</small>{% endif %}
+          <div class="item-links">{% if image_name.lower().endswith('.pdf') %}<a href="{{ url_for('public.media', filename=image_name) }}" target="_blank" rel="noopener noreferrer">Open PDF ↗</a>{% endif %}{% if item.data.get('verification_url') %}<a href="{{ item.data.verification_url }}" target="_blank" rel="noopener noreferrer">Verify ↗</a>{% endif %}</div>
+        </div>
+      </article>
+    {% else %}<p class="empty credential-empty">No certificates have been published yet.</p>{% endfor %}<p class="empty credential-no-results" hidden>No credentials match this search.</p></div>
+  </article>
+
+  <article class="room-panel section-trophies" id="trophies" aria-labelledby="trophiesTitle" tabindex="-1">
+    <div class="panel-head"><span>06</span><h2 id="trophiesTitle">Trophy Room</h2></div>
+    <div class="trophy-display">{% for item in data.crest %}
+      <article class="trophy-piece">{% set image_name = item.data.get('image_filename', '') %}
+        {% if image_name and not image_name.lower().endswith('.pdf') %}<button class="trophy-art previewable" type="button" data-title="{{ item.title }}" data-description="{{ item.data.get('issuer', '') }} · {{ item.data.get('description', '') }} {{ item.data.get('reason', '') }}" data-image="{{ url_for('public.media', filename=image_name) }}" aria-label="View award: {{ item.title }}"><img src="{{ url_for('public.media', filename=image_name) }}" alt="" loading="lazy"></button>
+        {% else %}<div class="trophy-art trophy-art-placeholder" aria-hidden="true"><span>✦</span></div>{% endif %}
+        <p class="section-kicker">{{ item.data.get('issuer', 'AWARD') }}</p><h3>{{ item.title }}</h3>{% if item.data.get('date') %}<small>{{ item.data.date }}</small>{% endif %}
+        {% if item.data.get('description') or item.data.get('reason') %}<details class="award-details"><summary>Recognition details</summary>{% if item.data.get('description') %}<p>{{ item.data.description }}</p>{% endif %}{% if item.data.get('reason') %}<p>{{ item.data.reason }}</p>{% endif %}</details>{% endif %}
+        {% if image_name.lower().endswith('.pdf') %}<a class="award-document" href="{{ url_for('public.media', filename=image_name) }}">View award document ↗</a>{% endif %}
+      </article>
+    {% else %}<p class="empty">No awards have been published yet.</p>{% endfor %}</div>
+  </article>
+
+  <article class="room-panel section-gallery" id="gallery" aria-labelledby="galleryTitle" tabindex="-1">
+    <div class="panel-head"><span>07</span><h2 id="galleryTitle">Event Gallery</h2></div>
+    <div class="filters gallery-filters" role="group" aria-label="Filter event gallery"><button class="filter active" data-filter="all" data-filter-target="event-grid" type="button" aria-pressed="true">All events</button>{% for category in data.gallery_categories %}<button class="filter" data-filter="{{ category|lower }}" data-filter-target="event-grid" type="button" aria-pressed="false">{{ category }}</button>{% endfor %}</div>
+    <div class="event-grid" id="event-grid">{% for item in data.gallery %}
+      {% set image_name = item.data.get('image_filename', '') %}
+      <article class="event-card searchable" data-category="{{ item.data.get('gallery_category', 'Events').lower() }}">
+        {% if image_name and not image_name.lower().endswith('.pdf') %}<button class="event-image previewable" type="button" data-title="{{ item.title }}" data-description="{{ item.data.get('caption', '') }}" data-image="{{ url_for('public.media', filename=image_name) }}" aria-label="Open photo from {{ item.title }}"><img src="{{ url_for('public.media', filename=image_name) }}" alt="" loading="lazy"></button>{% else %}<div class="event-image event-image-placeholder" aria-hidden="true"><span>{{ item.data.get('gallery_category', 'EVENT') }}</span></div>{% endif %}
+        <div class="event-caption"><span class="section-kicker">{{ item.data.get('gallery_category', 'EVENT') }}{% if item.data.get('date') %} · {{ item.data.date }}{% endif %}</span><h3>{{ item.title }}</h3>{% if item.data.get('caption') %}<p>{{ item.data.caption }}</p>{% endif %}{% if item.data.get('external_url') %}<a href="{{ item.data.external_url }}" target="_blank" rel="noopener noreferrer">Event details ↗</a>{% endif %}</div>
+      </article>
+    {% else %}<p class="empty">No event albums have been published yet.</p>{% endfor %}</div>
+  </article>
+
+  {% if profile.get('location_label') or profile.get('location_address') %}
+  <article class="room-panel section-map" id="location" aria-labelledby="locationTitle" tabindex="-1">
+    <div class="panel-head"><span>◎</span><h2 id="locationTitle">Location</h2></div>
+    <div class="contact-layout location-layout">
+      <div class="contact-intro">
+        <p class="section-kicker">FIND ME</p>
+        <h3>{{ profile.get('location_label', '') }}</h3>
+        {% if profile.get('location_address') %}<p>{{ profile.location_address }}</p>{% endif %}
+        {% if profile.get('map_lat') and profile.get('map_lng') %}<p class="muted"><small>{{ profile.map_lat }}, {{ profile.map_lng }}</small></p>{% endif %}
+      </div>
+      {% if profile.get('map_url') %}
+      <div class="map-embed"><iframe src="{{ profile.map_url }}" title="Map showing {{ profile.get('location_label', 'my location') }}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+      {% endif %}
+    </div>
+  </article>
+  {% endif %}
+
+  <article class="room-panel contact-panel section-contact" id="contact" aria-labelledby="contactTitle" tabindex="-1">
+    <div class="panel-head"><span>08</span><h2 id="contactTitle">Contact</h2></div>
+    <div class="contact-layout"><div class="contact-intro"><p class="section-kicker">START A CONVERSATION</p><h3>Have a project or opportunity in mind?</h3><p>Use a published contact channel or prepare a message below.</p>
+      <div class="contact-links">{% if profile.get('email') %}<a href="mailto:{{ profile.email }}">✉ {{ profile.email }}</a>{% endif %}{% if profile.get('phone') %}<a href="tel:{{ profile.phone }}">☎ {{ profile.phone }}</a>{% endif %}{% for key, label in [('website', 'Website'), ('linkedin', 'LinkedIn'), ('github', 'GitHub')] %}{% if profile.get(key) %}<a href="{{ profile[key] }}" target="_blank" rel="noopener noreferrer">{{ label }} ↗</a>{% endif %}{% endfor %}</div>
+    </div>
+    {% if profile.get('email') %}<form class="contact-form" id="contactForm" action="{{ url_for('public.contact') }}" method="post">
+      <input type="hidden" name="ts" id="contactTs" value="0">
+      <label class="hp-field" aria-hidden="true">Leave this field empty<input name="website_hp" tabindex="-1" autocomplete="off"></label>
+      <label for="contactName">Your name<input id="contactName" name="name" autocomplete="name" required maxlength="120"></label>
+      <label for="contactSender">Your email<input id="contactSender" name="email" type="email" autocomplete="email" required maxlength="254"></label>
+      <label for="contactMessage">Message<textarea id="contactMessage" name="message" rows="4" required maxlength="3000"></textarea></label>
+      <button class="btn primary" type="submit">Send message</button>
+      <p class="form-feedback" id="contactFeedback" role="status" aria-live="polite">Your message is sent directly to the site owner and is not shared with anyone else.</p>
+    </form>{% else %}<p class="empty contact-unavailable">A public email address has not been provided, so the message form is unavailable. Contact links appear here when published.</p>{% endif %}
+    </div>
+  </article>
+</section>
+
+{% if data.block %}
+<section class="content-grid" aria-label="Additional portfolio information">
+  {% for item in data.block %}
+    <article class="room-panel" id="custom-block-{{ item.slug }}">
+      <div class="panel-head"><span>+</span><h2>{{ item.title }}</h2></div>
+      {% if item.data.get('body') %}<p class="panel-body">{{ item.data.body }}</p>{% endif %}
+      {% if item.data.get('image_filename') and not item.data.image_filename.lower().endswith('.pdf') %}
+        <img class="detail-image" src="{{ url_for('public.media', filename=item.data.image_filename) }}" alt="{{ item.data.get('image_alt', item.title) }}">
+      {% endif %}
+      {% if item.data.get('external_url') %}<p class="panel-body"><a href="{{ item.data.external_url }}" target="_blank" rel="noopener noreferrer">Learn more ↗</a></p>{% endif %}
+    </article>
+  {% endfor %}
+</section>
+{% endif %}
+
+<dialog id="previewDialog" class="preview-dialog" aria-labelledby="previewTitle">
+  <button class="dialog-close" data-close type="button" aria-label="Close preview">×</button>
+  <img id="previewImage" alt="" hidden>
+  <h2 id="previewTitle"></h2>
+  <p id="previewDescription"></p>
+</dialog>
+<dialog class="quick-panel" id="quickPanel" aria-labelledby="quickTitle">
+  <button data-close class="dialog-close" type="button" aria-label="Close quick view">×</button>
+  <h2 id="quickTitle">Quick view</h2>
+  {% if profile.get('name') %}<p><strong>{{ profile.name }}</strong>{% if profile.get('role') %} · {{ profile.role }}{% endif %}</p>{% endif %}
+  {% if profile.get('tagline') %}<p>{{ profile.tagline }}</p>{% endif %}
+  <nav aria-label="Quick navigation">
+    <a href="#about">About &amp; Career</a>
+    <a href="#projects">Projects &amp; Innovation</a>
+    <a href="#publications">Publications</a>
+    <a href="#outreach">Clubs &amp; Outreach</a>
+    <a href="#certificates">Certificates</a>
+    <a href="#trophies">Trophy Room</a>
+    <a href="#gallery">Event Gallery</a>
+    <a href="#contact">Contact</a>
+  </nav>
+</dialog>
+{% endblock %}

@@ -1,0 +1,7 @@
+{
+  "name": "Saifur Rahman Portfolio",
+  "description": "Professional portfolio with interactive 3D studio, project showcase, research library, and content management studio.",
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
